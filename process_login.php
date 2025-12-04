@@ -8,11 +8,32 @@ error_reporting(E_ALL);
 $host = "sarahmdb.mysql.database.azure.com";
 $dbname = "mydatabase";
 $username = "cmet01@sarahmdb"; // full username
-$password = "Cardiff01"; // replace with real password
+$password = "Cardiff01";       // actual password
+$ssl_ca = __DIR__ . "/MysqlflexGlobalRootCA.crt.pem"; // path to CA file
 
-$conn = new mysqli($host, $username, $password, $dbname);
-if ($conn->connect_error) {
-    die("Database connection failed: " . $conn->connect_error);
+// Initialize MySQLi
+$mysqli = mysqli_init();
+if (!$mysqli) {
+    die("MySQLi initialization failed");
+}
+
+// Enable SSL
+mysqli_ssl_set($mysqli, NULL, NULL, $ssl_ca, NULL, NULL);
+
+// Create connection
+$conn = mysqli_real_connect(
+    $mysqli,
+    $host,
+    $username,
+    $password,
+    $dbname,
+    3306,
+    NULL,
+    MYSQLI_CLIENT_SSL
+);
+
+if (!$conn) {
+    die("Database connection failed: " . mysqli_connect_error());
 }
 
 // Process login
@@ -26,19 +47,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Fetch user
-    $stmt = $conn->prepare("SELECT id, name, email, password FROM shopusers WHERE email=? LIMIT 1");
-    if (!$stmt) die("Prepare failed: " . $conn->error);
+    $stmt = $mysqli->prepare("SELECT id, name, password FROM shopusers WHERE email=? LIMIT 1");
+    if (!$stmt) die("Prepare failed: " . $mysqli->error);
 
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $stmt->store_result();
 
     if ($stmt->num_rows === 1) {
-        $stmt->bind_result($id, $name, $db_email, $hashed_password);
+        $stmt->bind_result($id, $name, $hashed_password);
         $stmt->fetch();
 
         if (password_verify($password_input, $hashed_password)) {
-            // Login successful, set session
+            // Login successful
             $_SESSION['user_id'] = $id;
             $_SESSION['user_name'] = $name;
             header("Location: index.php");
@@ -54,9 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $stmt->close();
 } else {
-    header("Location: login.php");
-    exit();
+    die("Invalid request method.");
 }
 
-$conn->close();
+$mysqli->close();
 ?>
