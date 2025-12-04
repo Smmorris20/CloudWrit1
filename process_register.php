@@ -1,25 +1,23 @@
 <?php
+session_start();
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Azure MySQL connection details
+// Azure MySQL connection
 $host = "sarahmdb.mysql.database.azure.com";
 $dbname = "mydatabase";
-$username = "cmet01@sarahmdb"; // full username
-$password = "Cardiff01";       // actual password
-$ssl_ca = __DIR__ . "/MysqlflexGlobalRootCA.crt.pem"; // path to CA file
+$username = "cmet01@sarahmdb";
+$password = "Cardiff01"; // Replace with your real password
 
-// Initialize MySQLi
 $mysqli = mysqli_init();
 if (!$mysqli) {
     die("MySQLi initialization failed");
 }
 
-// Enable SSL
-mysqli_ssl_set($mysqli, NULL, NULL, $ssl_ca, NULL, NULL);
+// Enable SSL without verifying the certificate
+$mysqli->ssl_set(NULL, NULL, NULL, NULL, NULL);
 
-// Create connection
 $conn = mysqli_real_connect(
     $mysqli,
     $host,
@@ -28,7 +26,7 @@ $conn = mysqli_real_connect(
     $dbname,
     3306,
     NULL,
-    MYSQLI_CLIENT_SSL
+    MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT
 );
 
 if (!$conn) {
@@ -48,9 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $hashed_password = password_hash($password_input, PASSWORD_DEFAULT);
 
     $stmt = $mysqli->prepare("INSERT INTO shopusers (name, email, password) VALUES (?, ?, ?)");
-    if (!$stmt) {
-        die("Prepare failed: " . $mysqli->error);
-    }
+    if (!$stmt) die("Prepare failed: " . $mysqli->error);
 
     $stmt->bind_param("sss", $name, $email, $hashed_password);
 
