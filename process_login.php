@@ -7,20 +7,17 @@ error_reporting(E_ALL);
 // Azure MySQL connection
 $host = "sarahmdb.mysql.database.azure.com";
 $dbname = "mydatabase";
-$username = "cmet01@sarahmdb"; // full username
-$password = "Cardiff01";       // actual password
-$ssl_ca = __DIR__ . "/MysqlflexGlobalRootCA.crt.pem"; // path to CA file
+$username = "cmet01@sarahmdb";
+$password = "Cardiff01";
 
-// Initialize MySQLi
 $mysqli = mysqli_init();
 if (!$mysqli) {
     die("MySQLi initialization failed");
 }
 
-// Enable SSL
-mysqli_ssl_set($mysqli, NULL, NULL, $ssl_ca, NULL, NULL);
+// Enable SSL without verifying certificate
+$mysqli->ssl_set(NULL, NULL, NULL, NULL, NULL);
 
-// Create connection
 $conn = mysqli_real_connect(
     $mysqli,
     $host,
@@ -29,7 +26,7 @@ $conn = mysqli_real_connect(
     $dbname,
     3306,
     NULL,
-    MYSQLI_CLIENT_SSL
+    MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT
 );
 
 if (!$conn) {
@@ -46,8 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    // Fetch user
-    $stmt = $mysqli->prepare("SELECT id, name, password FROM shopusers WHERE email=? LIMIT 1");
+    $stmt = $mysqli->prepare("SELECT id, name, email, password FROM shopusers WHERE email=? LIMIT 1");
     if (!$stmt) die("Prepare failed: " . $mysqli->error);
 
     $stmt->bind_param("s", $email);
@@ -55,11 +51,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->store_result();
 
     if ($stmt->num_rows === 1) {
-        $stmt->bind_result($id, $name, $hashed_password);
+        $stmt->bind_result($id, $name, $db_email, $hashed_password);
         $stmt->fetch();
 
         if (password_verify($password_input, $hashed_password)) {
-            // Login successful
             $_SESSION['user_id'] = $id;
             $_SESSION['user_name'] = $name;
             header("Location: index.php");
@@ -75,7 +70,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $stmt->close();
 } else {
-    die("Invalid request method.");
+    header("Location: login.php");
+    exit();
 }
 
 $mysqli->close();
