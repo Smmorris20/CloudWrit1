@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <?php
-// updated
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+?>
+
 // MySQL database connection
 $host = "sarahmdb.mysql.database.azure.com";
 $dbname = "mydatabase";
