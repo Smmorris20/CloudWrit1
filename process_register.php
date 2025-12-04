@@ -1,74 +1,54 @@
 <?php
-// Simple database connection
-$serverName = "tcp:mycardiffmet.database.windows.net,1433";
-$connectionOptions = array(
-    "Database" => "myDatabase",
-    "Uid" => "myadmin",
-    "PWD" => "Abcdefgh0!",
-    "Encrypt" => 1,
-    "TrustServerCertificate" => 0
-);
+// MySQL database connection
+$host = "sarahmdb.mysql.database.azure.com";
+$dbname = "mydatabase";
+$username = "myadmin@sarahmdb"; // note the full username for Azure MySQL
+$password = "YourPasswordHere"; // replace with your real password
+
+// Create connection using MySQLi
+$conn = new mysqli($host, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    header("Location: register.php?error=" . urlencode("Database connection failed: " . $conn->connect_error));
+    exit();
+}
 
 // Process form submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name']);
     $email = trim($_POST['email']);
-    $password = $_POST['password'];
+    $password_input = $_POST['password'];
 
     // Basic validation
-    if (!empty($name) && !empty($email) && !empty($password)) {
-        // Connect to database
-        $conn = sqlsrv_connect($serverName, $connectionOptions);
+    if (!empty($name) && !empty($email) && !empty($password_input)) {
 
-        if ($conn) {
-            // Hash password
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        // Hash password
+        $hashed_password = password_hash($password_input, PASSWORD_DEFAULT);
 
-            // Insert into database
-            $sql = "INSERT INTO shopusers (name, email, password) VALUES (?, ?, ?)";
-            $params = array($name, $email, $hashed_password);
-            $stmt = sqlsrv_query($conn, $sql, $params);
+        // Prepare statement to prevent SQL injection
+        $stmt = $conn->prepare("INSERT INTO shopusers (name, email, password) VALUES (?, ?, ?)");
+        $stmt->bind_param("sss", $name, $email, $hashed_password);
 
-            if ($stmt) {
-                // Redirect to success page
-                header("Location: success.php");
-                exit();
-            } else {
-                // Get detailed error information
-                $errors = sqlsrv_errors();
-                $error_message = "Database error: ";
-                if ($errors != null) {
-                    foreach ($errors as $error) {
-                        $error_message .= "SQLSTATE: " . $error['SQLSTATE'] . ", ";
-                        $error_message .= "Code: " . $error['code'] . ", ";
-                        $error_message .= "Message: " . $error['message'];
-                    }
-                }
-                // Redirect back with detailed error
-                header("Location: register.html?error=" . urlencode($error_message));
-                exit();
-            }
-
-            sqlsrv_free_stmt($stmt);
-            sqlsrv_close($conn);
+        if ($stmt->execute()) {
+            // Success, redirect
+            header("Location: success.php");
+            exit();
         } else {
-            $connection_errors = sqlsrv_errors();
-            $conn_error_message = "Database connection failed: ";
-            if ($connection_errors != null) {
-                foreach ($connection_errors as $error) {
-                    $conn_error_message .= $error['message'];
-                }
-            }
-            header("Location: register.html?error=" . urlencode($conn_error_message));
+            header("Location: register.php?error=" . urlencode("Database error: " . $stmt->error));
             exit();
         }
+
+        $stmt->close();
     } else {
-        header("Location: register.html?error=" . urlencode("Please fill all fields"));
+        header("Location: register.php?error=" . urlencode("Please fill all fields"));
         exit();
     }
 } else {
-    // If someone tries to access this page directly
-    header("Location: register.html");
+    // If accessed directly
+    header("Location: register.php");
     exit();
 }
+
+$conn->close();
 ?>
