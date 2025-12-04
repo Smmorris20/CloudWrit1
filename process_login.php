@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <?php
 session_start(); // Start session to store user info
 
