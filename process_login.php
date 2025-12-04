@@ -8,7 +8,7 @@ error_reporting(E_ALL);
 $host = "sarahmdb.mysql.database.azure.com";
 $dbname = "mydatabase";
 $username = "cmet01@sarahmdb"; // full username
-$password = "YourPasswordHere"; // replace with real password
+$password = "Cardiff01"; // replace with real password
 
 $conn = new mysqli($host, $username, $password, $dbname);
 if ($conn->connect_error) {
