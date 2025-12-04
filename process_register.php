@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <?php
 // MySQL database connection
 $host = "sarahmdb.mysql.database.azure.com";
