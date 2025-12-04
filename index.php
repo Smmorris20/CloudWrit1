@@ -1,117 +1,80 @@
-<?php
-session_start();
-
-$users = [
-    'admin' => 'password123',
-    'user1' => 'mypassword'
-];
-
-$message = '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = $_POST['username'] ?? '';
-    $password = $_POST['password'] ?? '';
-
-    if (isset($users[$username]) && $users[$username] === $password) {
-        $_SESSION['user'] = $username;
-        header("Location: dashboard.php");
-        exit();
-    } else {
-        $message = 'Invalid username or password.';
-    }
-}
-?>
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyShop - Welcome</title>
+    <link rel="stylesheet" href="styles.css">
     <style>
-        /* Basic reset */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #6a11cb, #2575fc);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .login-container {
-            background: white;
-            padding: 30px 40px;
-            border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            width: 320px;
-            text-align: center;
-        }
-
-        h2 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        input[type="text"],
-        input[type="password"] {
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        input[type="text"]:focus,
-        input[type="password"]:focus {
-            border-color: #2575fc;
-            outline: none;
-        }
-
-        input[type="submit"] {
-            padding: 12px;
-            background-color: #2575fc;
-            border: none;
+        /* Header styling */
+        .header {
+            background-color: #007BFF; /* Blue background */
             color: white;
+            padding: 20px 0;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        /* Bold, stand-out title */
+        .header h1 {
+            margin: 0;
+            font-size: 3em;
             font-weight: bold;
-            font-size: 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s;
         }
 
-        input[type="submit"]:hover {
-            background-color: #6a11cb;
+        .header p {
+            margin: 5px 0 0 0;
+            font-size: 1.2em;
         }
 
-        .message {
-            margin-top: 15px;
-            color: #d93025;
-            font-weight: 600;
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Welcome text */
+        .welcome-text {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+            color: #555;
+        }
+
+        /* Signup link */
+        .signup-link {
+            display: inline-block;
+            background-color: #0056b3;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+
+        .signup-link:hover {
+            background-color: #003d80;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h2>Login</h2>
-        <form method="post" action="">
-            <input type="text" name="username" placeholder="Username" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <input type="submit" value="Login">
-        </form>
-        <?php if ($message): ?>
-            <p class="message"><?php echo htmlspecialchars($message); ?></p>
-        <?php endif; ?>
+    <div class="header">
+        <div class="container">
+            <h1>MyShop</h1>
+            <p>Your one-stop destination for amazing products</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="welcome-text">
+            <h2>Welcome to MyShop</h2>
+            <p>Join our community today to access exclusive deals and features!</p>
+
+            <!-- Simple link to signup page -->
+            <a href="register.php" class="signup-link">Create Your Account</a>
+        </div>
     </div>
 </body>
 </html>
