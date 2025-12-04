@@ -3,7 +3,7 @@
 $host = "sarahmdb.mysql.database.azure.com";
 $dbname = "mydatabase";
 $username = "myadmin@sarahmdb"; // note the full username for Azure MySQL
-$password = "YourPasswordHere"; // replace with your real password
+$password = "Cardiff01"; // replace with your real password
 
 // Create connection using MySQLi
 $conn = new mysqli($host, $username, $password, $dbname);
