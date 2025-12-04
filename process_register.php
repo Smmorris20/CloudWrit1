@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <?php
+// updated
 // MySQL database connection
 $host = "sarahmdb.mysql.database.azure.com";
 $dbname = "mydatabase";
