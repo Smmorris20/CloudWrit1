@@ -1,59 +1,42 @@
-<!DOCTYPE html>
 <?php
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-?>
 
-// MySQL database connection
+// MySQL connection
 $host = "sarahmdb.mysql.database.azure.com";
 $dbname = "mydatabase";
-$username = "cmet01@sarahmdb"; // note the full username for Azure MySQL
-$password = "Cardiff01"; // replace with your real password
+$username = "cmet01@sarahmdb";
+$password = "YourPasswordHere";
 
-// Create connection using MySQLi
 $conn = new mysqli($host, $username, $password, $dbname);
-
-// Check connection
 if ($conn->connect_error) {
-    header("Location: register.php?error=" . urlencode("Database connection failed: " . $conn->connect_error));
-    exit();
+    die("Connection failed: " . $conn->connect_error);
 }
 
-// Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = trim($_POST['name']);
-    $email = trim($_POST['email']);
-    $password_input = $_POST['password'];
+    $name = trim($_POST['name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $password_input = $_POST['password'] ?? '';
 
-    // Basic validation
-    if (!empty($name) && !empty($email) && !empty($password_input)) {
-
-        // Hash password
+    if ($name && $email && $password_input) {
         $hashed_password = password_hash($password_input, PASSWORD_DEFAULT);
 
-        // Prepare statement to prevent SQL injection
         $stmt = $conn->prepare("INSERT INTO shopusers (name, email, password) VALUES (?, ?, ?)");
         $stmt->bind_param("sss", $name, $email, $hashed_password);
 
         if ($stmt->execute()) {
-            // Success, redirect
-            header("Location: success.php");
-            exit();
+            echo "Registration successful!";
         } else {
-            header("Location: register.php?error=" . urlencode("Database error: " . $stmt->error));
-            exit();
+            die("Database error: " . $stmt->error);
         }
 
         $stmt->close();
     } else {
-        header("Location: register.php?error=" . urlencode("Please fill all fields"));
-        exit();
+        die("Please fill all fields");
     }
 } else {
-    // If accessed directly
-    header("Location: register.php");
-    exit();
+    die("Invalid request method");
 }
 
 $conn->close();
