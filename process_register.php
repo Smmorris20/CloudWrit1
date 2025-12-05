@@ -15,7 +15,7 @@ $host = "sarahmdb.mysql.database.azure.com";
 $dbname = "mydatabase";
 $username = "cmet01@sarahmdb"; // full username
 $password = "Cardiff01";       // your real password
-$ssl_ca = __DIR__ . "/MysqlflexGlobalRootCA.crt.pem"; // path to SSL cert
+$ssl_ca = __DIR__ . "/ssl/DigiCertGlobalRootG2.crt.pem"; // path to SSL cert
 
 // Connect using MySQLi with SSL
 $conn = mysqli_init();
