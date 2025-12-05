@@ -122,7 +122,11 @@ $conn->close();
 <header class="header">
     <div class="container">
         <h1>ShopSphere - Products</h1>
-        <p>Welcome, <?php echo htmlspecialchars($_SESSION['name'] ?? 'User'); ?>! | <a href="logout.php" style="color: white; text-decoration: underline;">Logout</a></p>
+<p>
+    Welcome, <?php echo htmlspecialchars($_SESSION['name'] ?? 'User'); ?>! | 
+    <a href="cart.php" style="color: yellow; text-decoration: underline;">View Cart (<?php echo count($_SESSION['cart']); ?>)</a> | 
+    <a href="logout.php" style="color: white; text-decoration: underline;">Logout</a>
+</p>
     </div>
 </header>
 
