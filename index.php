@@ -33,7 +33,7 @@
         font-size: 1.2em;
         color: #555;
     }
-    /* Added class for Shop link */
+    /* --- FIX: Updated the selector list to include .shop-link --- */
     .shop-link, .signup-link, .login-link {
         display: inline-block;
         padding: 12px 30px;
@@ -41,16 +41,17 @@
         border-radius: 4px;
         font-size: 18px;
         margin-top: 20px;
-        margin-right: 10px; /* Added spacing */
+        margin-right: 10px;
     }
+    /* --- NEW SHOP LINK STYLING --- */
     .shop-link {
-        background-color: #ffc107; /* Yellow color to stand out */
+        background-color: #ffc107; /* Bright color to stand out */
         color: #333;
     }
     .shop-link:hover {
         background-color: #e0a800;
     }
-    /* Existing Link Styles */
+    /* --- Existing Link Styles --- */
     .signup-link {
         background-color: #0056b3;
         color: white;
@@ -61,7 +62,7 @@
     .login-link {
         background-color: #28a745;
         color: white;
-        margin-left: 0; /* Removed margin-left: 10px from original */
+        margin-left: 0;
     }
     .login-link:hover {
         background-color: #218838;
@@ -83,7 +84,7 @@
         
                 <a href="shop.php" class="shop-link">Browse Products</a>
         
-                <a href="register.php" class="signup-link">Create Your Account</a>
+        <a href="register.php" class="signup-link">Create Your Account</a>
         <a href="login.php" class="login-link">Sign In</a>
     </div>
 </div>
