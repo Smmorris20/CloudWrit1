@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // 2. DATABASE CONNECTION
-require 'db_connect.php'; // This establishes $conn
+require 'db_config.php'; // This establishes $conn
 
 // 3. INITIALIZE CART: Ensure the cart session variable exists
 if (!isset($_SESSION['cart'])) {
