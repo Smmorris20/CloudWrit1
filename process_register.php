@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // Azure MySQL connection
 $host = "sarahmdb.mysql.database.azure.com";
 $dbname = "mydatabase";
-$username = "cmet01@sarahmdb"; // full username
+$username = "cmet01"; // full username
 $password = "Cardiff01";       // your real password
 $ssl_ca = __DIR__ . "/ssl/DigiCertGlobalRootG2.crt.pem"; // path to SSL cert
 
