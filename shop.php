@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // 2. DATABASE CONNECTION
-// Requires the central config file to get $conn
+// Requires the central config file to get the $conn object.
 require 'db_config.php'; 
 
 // 3. INITIALIZE CART: Ensure the cart session variable exists
@@ -45,7 +45,6 @@ $conn->close();
     <style>
         /* BASE STYLES COPIED FROM YOUR TEMPLATE */
         body {
-            /* Added font-family for consistency */
             font-family: Arial, Helvetica, sans-serif; 
         }
         .header {
@@ -99,7 +98,7 @@ $conn->close();
             /* Styled to match the look of your .signup-link button */
             display: block;
             width: 100%;
-            background-color: #0056b3; /* Similar to signup-link */
+            background-color: #0056b3; 
             color: white; 
             padding: 12px 30px; 
             border: none;
@@ -115,6 +114,7 @@ $conn->close();
             text-align: right;
             font-size: 1.1em;
             margin-top: 10px;
+            margin-bottom: 20px; /* Added spacing */
         }
     </style>
 </head>
@@ -122,17 +122,22 @@ $conn->close();
 <header class="header">
     <div class="container">
         <h1>ShopSphere - Products</h1>
-<p>
-    Welcome, <?php echo htmlspecialchars($_SESSION['name'] ?? 'User'); ?>! | 
-    <a href="cart.php" style="color: yellow; text-decoration: underline;">View Cart (<?php echo count($_SESSION['cart']); ?>)</a> | 
-    <a href="logout.php" style="color: white; text-decoration: underline;">Logout</a>
-</p>
+        <p>
+            Welcome, <?php echo htmlspecialchars($_SESSION['name'] ?? 'User'); ?>! | 
+            <a href="logout.php" style="color: white; text-decoration: underline;">Logout</a>
+        </p>
     </div>
 </header>
 
 <div class="container">
     <div class="cart-info">
-        You have **<?php echo count($_SESSION['cart']); ?>** unique items in your cart.
+        You have **<?php echo count($_SESSION['cart']); ?>** unique items in your cart. 
+        
+        <?php if (count($_SESSION['cart']) > 0): ?>
+            <a href="cart.php" style="font-weight: bold; margin-left: 15px; padding: 5px 10px; background-color: #ffc107; color: #333; border-radius: 4px; text-decoration: none;">
+                View Cart →
+            </a>
+        <?php endif; ?>
     </div>
 
     <h2>Product Catalog</h2>
