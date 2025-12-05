@@ -61,8 +61,8 @@
 <body>
 <div class="header">
     <div class="container">
-        <h1>MyShop</h1>
-        <p>Your one-stop destination for amazing products</p>
+        <h1>ShopSphere</h1>
+        <p>Your one-stop destination for amazing products by Sarah Morris ST20285209</p>
     </div>
 </div>
 
