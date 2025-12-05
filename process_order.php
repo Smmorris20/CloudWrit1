@@ -19,20 +19,22 @@ if (empty($cart_items) || $total_amount === false || $total_amount <= 0) {
     exit();
 }
 
+// -----------------------------------------------------------------
+// FIX: Initialize $order_id here in case the transaction fails early.
+$order_id = null;
+// -----------------------------------------------------------------
+
 // 2. Start Database Transaction
-// This ensures data integrity: if the order items fail, the order record is also removed.
 $conn->begin_transaction();
 $success = true;
 
 try {
     // --- A. INSERT INTO ORDERS TABLE ---
-    // Record the main order details
     $stmt_order = $conn->prepare("INSERT INTO Orders (UserID, TotalAmount, Status) VALUES (?, ?, 'Processing')");
     if (!$stmt_order) {
         throw new Exception("Order Prepare Failed: " . $conn->error);
     }
     
-    // 'i' for integer (UserID), 'd' for decimal/double (TotalAmount)
     $stmt_order->bind_param("id", $user_id, $total_amount); 
     if (!$stmt_order->execute()) {
         throw new Exception("Order Execution Failed: " . $stmt_order->error);
@@ -42,7 +44,6 @@ try {
     $stmt_order->close();
 
     // --- B. INSERT INTO ORDER_ITEMS TABLE ---
-    // Record all the individual products bought
     $stmt_item = $conn->prepare("INSERT INTO Order_Items (OrderID, ProductID, Quantity, PriceAtPurchase) VALUES (?, ?, ?, ?)");
     if (!$stmt_item) {
         throw new Exception("Item Prepare Failed: " . $conn->error);
@@ -53,20 +54,15 @@ try {
         $quantity = $item['quantity'];
         $price = $item['price'];
         
-        // 'iii' for three integers (OrderID, ProductID, Quantity), 'd' for decimal (Price)
         $stmt_item->bind_param("iiid", $order_id, $product_id, $quantity, $price); 
         
         if (!$stmt_item->execute()) {
             throw new Exception("Item Execution Failed for ProductID: $product_id - " . $stmt_item->error);
         }
-        
-        // --- C. OPTIONAL: DECREMENT STOCK ---
-        // You would typically add logic here to update the Products table and decrease StockQuantity
     }
     $stmt_item->close();
 
     // --- D. COMMIT TRANSACTION ---
-    // If all inserts succeeded, make the changes permanent
     $conn->commit();
     
     // 3. CLEAR CART SESSION
@@ -77,12 +73,13 @@ try {
     $conn->rollback();
     error_log("Order Process Failed (Transaction Rolled Back): " . $e->getMessage());
     $success = false;
+    // Note: If the error was a SQL error, $order_id might still be null here.
 }
 
 $conn->close();
 
 // 5. Final Redirect based on success
-if ($success) {
+if ($success && $order_id) { // Added check for $order_id
     // Redirect to a success page showing the new order ID
     header("Location: order_success.php?order_id=" . $order_id);
 } else {
