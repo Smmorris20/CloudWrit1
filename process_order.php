@@ -1,11 +1,10 @@
 <?php
 session_start();
-// --- TEMPORARY DEBUGGING START ---
-// KEEP THESE LINES HERE ONLY UNTIL THE SCRIPT STOPS GOING TO THE SIGN-IN PAGE.
+// --- TEMPORARY DEBUGGING START: KEEP THESE LINES! ---
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL); 
-// --- TEMPORARY DEBUGGING END ---
+// --- END TEMPORARY DEBUGGING ---
 
 // Require the centralized configuration file
 require 'db_config.php'; 
@@ -26,27 +25,24 @@ if (empty($cart_items) || $total_amount === false || $total_amount <= 0) {
     exit();
 }
 
-// -----------------------------------------------------------------
-// FIX: Initialize $order_id here in case the transaction fails early.
+// Initialize $order_id for use outside the try block
 $order_id = null; 
-// -----------------------------------------------------------------
 
 // 2. Start Database Transaction
 $conn->begin_transaction();
 $success = true;
+$error_message = ""; // Variable to hold the specific error
 
 try {
     // --- A. INSERT INTO ORDERS TABLE ---
     $stmt_order = $conn->prepare("INSERT INTO Orders (UserID, TotalAmount, Status) VALUES (?, ?, 'Processing')");
     if (!$stmt_order) {
-        // If preparation fails, roll back and throw
         throw new Exception("Order Prepare Failed: " . $conn->error);
     }
     
     // 'i' for integer (UserID), 'd' for decimal/double (TotalAmount)
     $stmt_order->bind_param("id", $user_id, $total_amount); 
     if (!$stmt_order->execute()) {
-        // If execution fails, roll back and throw
         throw new Exception("Order Execution Failed: " . $stmt_order->error);
     }
     
@@ -82,20 +78,26 @@ try {
 } catch (Exception $e) {
     // 4. ROLLBACK TRANSACTION on error
     $conn->rollback();
-    error_log("Order Process Failed (Transaction Rolled Back): " . $e->getMessage());
+    
+    // --- CRITICAL FIX: Capture the specific error message ---
+    $error_message = $e->getMessage();
+    // --------------------------------------------------------
+    
+    error_log("Order Process Failed (Transaction Rolled Back): " . $error_message);
     $success = false;
-    // Note: The $order_id is now defined as null or the failed ID.
 }
 
 $conn->close();
 
 // 5. Final Redirect based on success
-if ($success && $order_id) { // We require both success and a valid $order_id
-    // Redirect to a success page showing the new order ID
+if ($success && $order_id) { 
+    // Success redirect
     header("Location: order_success.php?order_id=" . $order_id);
 } else {
-    // Redirect back to cart with an error
-    header("Location: cart.php?error=" . urlencode("We could not finalize your order. Please try again."));
+    // Failure redirect: Pass the specific error message to the cart page
+    // If $error_message is empty (e.g., security check failure), use the generic message.
+    $display_error = $error_message ?: "We could not finalize your order. Please try again.";
+    header("Location: cart.php?error=" . urlencode($display_error));
 }
 
 exit();
