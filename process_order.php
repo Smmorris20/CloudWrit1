@@ -1,6 +1,7 @@
 <?php
 session_start();
 // --- TEMPORARY DEBUGGING START: KEEP THESE LINES! ---
+// These force PHP to display errors.
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL); 
@@ -31,7 +32,7 @@ $order_id = null;
 // 2. Start Database Transaction
 $conn->begin_transaction();
 $success = true;
-$error_message = ""; // Variable to hold the specific error
+$error_message = ""; 
 
 try {
     // --- A. INSERT INTO ORDERS TABLE ---
@@ -78,26 +79,27 @@ try {
 } catch (Exception $e) {
     // 4. ROLLBACK TRANSACTION on error
     $conn->rollback();
-    
-    // --- CRITICAL FIX: Capture the specific error message ---
     $error_message = $e->getMessage();
-    // --------------------------------------------------------
-    
-    error_log("Order Process Failed (Transaction Rolled Back): " . $error_message);
     $success = false;
 }
 
 $conn->close();
+
+// ----------------------------------------------------------------------------------
+// CRITICAL DEBUGGING LINE: Displays the SQL error instead of redirecting on failure
+if (!$success) {
+    die("TRANSACTION FAILED: " . htmlspecialchars($error_message));
+}
+// ----------------------------------------------------------------------------------
+
 
 // 5. Final Redirect based on success
 if ($success && $order_id) { 
     // Success redirect
     header("Location: order_success.php?order_id=" . $order_id);
 } else {
-    // Failure redirect: Pass the specific error message to the cart page
-    // If $error_message is empty (e.g., security check failure), use the generic message.
-    $display_error = $error_message ?: "We could not finalize your order. Please try again.";
-    header("Location: cart.php?error=" . urlencode($display_error));
+    // If the script runs here (which it shouldn't, due to the die() above), use the generic failure.
+    header("Location: cart.php?error=" . urlencode("A critical error occurred. Check logs."));
 }
 
 exit();
