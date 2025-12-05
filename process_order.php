@@ -1,5 +1,12 @@
 <?php
 session_start();
+// --- TEMPORARY DEBUGGING START ---
+// KEEP THESE LINES HERE ONLY UNTIL THE SCRIPT STOPS GOING TO THE SIGN-IN PAGE.
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL); 
+// --- TEMPORARY DEBUGGING END ---
+
 // Require the centralized configuration file
 require 'db_config.php'; 
 
@@ -21,7 +28,7 @@ if (empty($cart_items) || $total_amount === false || $total_amount <= 0) {
 
 // -----------------------------------------------------------------
 // FIX: Initialize $order_id here in case the transaction fails early.
-$order_id = null;
+$order_id = null; 
 // -----------------------------------------------------------------
 
 // 2. Start Database Transaction
@@ -32,11 +39,14 @@ try {
     // --- A. INSERT INTO ORDERS TABLE ---
     $stmt_order = $conn->prepare("INSERT INTO Orders (UserID, TotalAmount, Status) VALUES (?, ?, 'Processing')");
     if (!$stmt_order) {
+        // If preparation fails, roll back and throw
         throw new Exception("Order Prepare Failed: " . $conn->error);
     }
     
+    // 'i' for integer (UserID), 'd' for decimal/double (TotalAmount)
     $stmt_order->bind_param("id", $user_id, $total_amount); 
     if (!$stmt_order->execute()) {
+        // If execution fails, roll back and throw
         throw new Exception("Order Execution Failed: " . $stmt_order->error);
     }
     
@@ -54,6 +64,7 @@ try {
         $quantity = $item['quantity'];
         $price = $item['price'];
         
+        // 'iii' for three integers (OrderID, ProductID, Quantity), 'd' for decimal (Price)
         $stmt_item->bind_param("iiid", $order_id, $product_id, $quantity, $price); 
         
         if (!$stmt_item->execute()) {
@@ -73,13 +84,13 @@ try {
     $conn->rollback();
     error_log("Order Process Failed (Transaction Rolled Back): " . $e->getMessage());
     $success = false;
-    // Note: If the error was a SQL error, $order_id might still be null here.
+    // Note: The $order_id is now defined as null or the failed ID.
 }
 
 $conn->close();
 
 // 5. Final Redirect based on success
-if ($success && $order_id) { // Added check for $order_id
+if ($success && $order_id) { // We require both success and a valid $order_id
     // Redirect to a success page showing the new order ID
     header("Location: order_success.php?order_id=" . $order_id);
 } else {
