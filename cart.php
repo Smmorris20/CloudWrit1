@@ -44,6 +44,11 @@ $total = $subtotal + $shipping;
         .totals-summary .total-amount { font-weight: bold; font-size: 1.5em; color: #007BFF; border-top: 1px solid #ccc; padding-top: 10px; margin-top: 10px; }
         .checkout-btn { display: block; width: 100%; padding: 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; font-size: 1.2em; cursor: pointer; margin-top: 20px; }
         .error-message { color: red; background-color: #ffe0e0; padding: 10px; border: 1px solid red; border-radius: 4px; margin-bottom: 15px; }
+        
+        /* New Payment Form Styles */
+        .payment-form { padding: 15px; border: 1px solid #ccc; border-radius: 4px; margin-top: 20px; }
+        .payment-form label { display: block; margin-top: 10px; font-weight: bold; }
+        .payment-form input { width: 95%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 3px; }
     </style>
 </head>
 <body>
@@ -87,12 +92,60 @@ $total = $subtotal + $shipping;
             <div><span>Shipping:</span> <span>$<?php echo number_format($shipping, 2); ?></span></div>
             <div class="total-amount"><span>Total:</span> <span>$<?php echo number_format($total, 2); ?></span></div>
 
-            <form method="POST" action="process_order.php">
-                <input type="hidden" name="total_amount" value="<?php echo $total; ?>">
-                <button type="submit" class="checkout-btn">Proceed to Checkout</button>
-            </form>
-        </div>
+            <div class="payment-form">
+                <h4>Payment Details (Mockup)</h4>
+                
+                <form method="POST" action="process_order.php" id="checkout-form">
+                    
+                    <label for="cardNumber">Card Number:</label>
+                    <input type="text" id="cardNumber" value="4111********1111" disabled> 
+                    
+                    <label for="expiry">Expiry / CVV:</label>
+                    <input type="text" id="expiry" value="12/25 / 123" disabled style="width: 45%; display: inline-block;">
+                    
+                    <input type="hidden" name="total_amount" value="<?php echo number_format($total, 2, '.', ''); ?>">
+                    <input type="hidden" name="payment_token" id="payment_token" value="mock_valid_token_<?php echo time(); ?>">
+
+                    <button type="submit" class="checkout-btn" style="margin-top: 15px;">
+                        Pay $<?php echo number_format($total, 2); ?> and Complete Order
+                    </button>
+                </form>
+            </div>
+            </div>
     <?php endif; ?>
 </div>
+
+<script>
+    // ----------------------------------------------------------------------
+    // NOTE: This JavaScript is for demonstration only. 
+    // The 'payment_token' is generated client-side and is NOT secure.
+    // In a real application, you would use a payment gateway's SDK 
+    // to generate this token securely.
+    // ----------------------------------------------------------------------
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkoutForm = document.getElementById('checkout-form');
+        const tokenField = document.getElementById('payment_token');
+        
+        // Example logic for generating a mock token on form submission (or page load)
+        checkoutForm.addEventListener('submit', function(e) {
+            // Check if the user is trying to test a failure case
+            const cardNumber = document.getElementById('cardNumber').value;
+            
+            if (cardNumber.includes('FAIL')) {
+                // If the user types 'FAIL' in the card field, intentionally submit an empty token
+                tokenField.value = ""; 
+                alert("Simulating payment failure: Token set to empty string for validation test.");
+            } else {
+                // Otherwise, ensure a mock token is set
+                if (tokenField.value === "") {
+                    // Regenerate a valid mock token if it was cleared
+                    tokenField.value = "mock_valid_token_" + Date.now();
+                }
+            }
+        });
+    });
+</script>
+
 </body>
 </html>
