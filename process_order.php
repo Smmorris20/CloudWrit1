@@ -6,7 +6,6 @@ require 'db_config.php';
 
 // --- AZURE FUNCTION CONFIGURATION ---
 $azure_function_url = "https://sarahm-funcapp-a4ffeyebfqc3atay.ukwest-01.azurewebsites.net/validatepayment";
-// Note: In a real system, you would abstract this URL into db_config.php or environment variables.
 // ---
 
 // 1. Security and Initial Validation Checks
@@ -18,20 +17,27 @@ if (!isset($_SESSION['user_id']) || $_SERVER['REQUEST_METHOD'] !== 'POST') {
 $user_id = $_SESSION['user_id'];
 $cart_items = $_SESSION['cart'] ?? [];
 $total_amount = filter_input(INPUT_POST, 'total_amount', FILTER_VALIDATE_FLOAT);
+// CRITICAL CHANGE: Extract the token from the POST data submitted by cart.php
+$payment_token = filter_input(INPUT_POST, 'payment_token', FILTER_SANITIZE_STRING);
+
 
 if (empty($cart_items) || $total_amount === false || $total_amount <= 0) {
     header("Location: cart.php?error=" . urlencode("Cart is empty or total is invalid."));
     exit();
 }
+// Add check for the required payment token
+if (empty($payment_token)) {
+    // This catches an explicit failure case from the client (e.g., if JS cleared the token)
+    header("Location: cart.php?error=" . urlencode("Payment token is missing. Please re-enter payment details."));
+    exit();
+}
 
-// 2. --- PAYMENT DATA MOCKUP (Replace with actual form data in production) ---
-// For testing, we mock the payment token and currency.
-// In a real e-commerce flow, this data would come from a payment gateway 
-// (e.g., a token received client-side after payment form submission).
+
+// 2. --- PREPARE DATA FOR AZURE FUNCTION ---
 $payment_data = [
     'amount' => $total_amount, 
-    'currency' => 'GBP', // Change to your intended currency
-    'token' => 'tok_' . bin2hex(random_bytes(16)) // Simulate a unique, valid token
+    'currency' => 'GBP', // Use your intended currency code
+    'token' => $payment_token       // USE THE SUBMITTED TOKEN HERE
 ];
 
 
@@ -39,7 +45,6 @@ $payment_data = [
 
 $ch = curl_init($azure_function_url);
 
-// Configure cURL options for POST request
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_POST, true);
 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payment_data));
@@ -66,7 +71,7 @@ if ($curl_error) {
 if ($http_status !== 200) {
     // The Azure Function returned a validation failure (e.g., HTTP 400 Bad Request)
     $response_data = json_decode($response_json, true);
-    $error_detail = $response_data['message'] ?? "Unknown Validation Error.";
+    $error_detail = $response_data['message'] ?? "Unknown Validation Error (Status: {$http_status}).";
     $error_message = "Payment Validation Failed: " . $error_detail;
     
     // Redirect back to the cart with the specific error message from the Azure Function
@@ -86,8 +91,6 @@ $conn->begin_transaction();
 
 try {
     // --- A. INSERT INTO ORDERS TABLE ---
-    // Note: You might set the Status to 'Payment_Authorized' instead of 'Processing' 
-    // here, anticipating a second step to confirm/capture payment.
     $stmt_order = $conn->prepare("INSERT INTO Orders (UserID, TotalAmount, Status) VALUES (?, ?, 'Processing')");
     if (!$stmt_order) {
         throw new Exception("Order Prepare Failed: " . $conn->error);
@@ -121,13 +124,11 @@ try {
     $stmt_item->close();
 
     // ----------------------------------------------------------------------
-    // --- C. (New Step): CALL REAL PAYMENT GATEWAY API HERE ---
-    // At this point, the data is validated. The next step would be to call 
-    // Stripe/PayPal/etc. using $payment_data['token'] to process the money.
-    // If the payment gateway succeeds, you proceed; otherwise, you rollback.
+    // NOTE: This is where the code would usually call the REAL payment gateway 
+    // to capture the funds using the validated $payment_token.
     // ----------------------------------------------------------------------
 
-    // --- D. COMMIT TRANSACTION ---
+    // --- C. COMMIT TRANSACTION ---
     $conn->commit();
     
     // 6. CLEAR CART SESSION
@@ -137,7 +138,6 @@ try {
     // 7. ROLLBACK TRANSACTION on error
     $conn->rollback();
     
-    // Log the detailed error internally
     error_log("Order Process Failed (Transaction Rolled Back): " . $e->getMessage());
     $success = false;
 }
@@ -146,11 +146,9 @@ $conn->close();
 
 // 8. Final Redirect based on success
 if ($success && $order_id) { 
-    // Redirect to a success page showing the new order ID
     header("Location: order_success.php?order_id=" . $order_id);
 } else {
-    // Redirect back to cart with the generic error message
-    header("Location: cart.php?error=" . urlencode("We could not finalize your order due to an internal error. Please contact support."));
+    header("Location: cart.php?error=" . urlencode("We could not finalize your order due to an internal error."));
 }
 
 exit();
