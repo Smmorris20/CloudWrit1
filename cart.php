@@ -98,7 +98,7 @@ $total = $subtotal + $shipping;
                 <form method="POST" action="process_order.php" id="checkout-form">
                     
                     <label for="cardNumber">Card Number:</label>
-                    <input type="text" id="cardNumber" value="4111********1111" disabled> 
+                    <input type="text" id="cardNumber" value="FAIL" disabled> 
                     
                     <label for="expiry">Expiry / CVV:</label>
                     <input type="text" id="expiry" value="12/25 / 123" disabled style="width: 45%; display: inline-block;">
