@@ -68,19 +68,23 @@ try {
         $quantity = (int) $item['quantity'];
 
         // Lock row for update
-        $stmt_stock = $conn->prepare("SELECT stockquantity FROM Products WHERE ProductID = ? FOR UPDATE");
+        $stmt_stock = $conn->prepare("SELECT StockQuantity FROM Products WHERE ProductID = ? FOR UPDATE");
         $stmt_stock->bind_param("i", $product_id);
         $stmt_stock->execute();
         $stmt_stock->bind_result($current_stock);
         $stmt_stock->fetch();
         $stmt_stock->close();
 
-        if ($current_stock === null || $quantity > $current_stock) {
+        if ($current_stock === null) {
+            throw new Exception("Product ID $product_id not found in database");
+        }
+
+        if ($quantity > $current_stock) {
             throw new Exception("Not enough stock for product ID: $product_id");
         }
 
         // Deduct stock
-        $stmt_update = $conn->prepare("UPDATE Products SET stockquantity = stockquantity - ? WHERE ProductID = ?");
+        $stmt_update = $conn->prepare("UPDATE Products SET StockQuantity = StockQuantity - ? WHERE ProductID = ?");
         $stmt_update->bind_param("ii", $quantity, $product_id);
         if (!$stmt_update->execute()) {
             throw new Exception("Failed to update stock for product ID: $product_id");
@@ -116,17 +120,14 @@ try {
 
 } catch (Exception $e) {
     $conn->rollback();
-    error_log("Order failed: " . $e->getMessage());
-    $success = false;
+    // TEMPORARY: Display the exact error for debugging
+    echo "Order process failed: " . $e->getMessage();
+    exit;
 }
 
 $conn->close();
 
-// 4. Redirect
-if ($success && $order_id) {
-    header("Location: order_success.php?order_id=" . $order_id);
-} else {
-    header("Location: cart.php?error=" . urlencode("We could not finalize your order due to an internal error."));
-}
+// 4. Redirect to success page
+header("Location: order_success.php?order_id=" . $order_id);
 exit();
 ?>
